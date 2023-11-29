@@ -45,16 +45,13 @@ def convert_PubLayNet_blobs_to_target_blobs(model_dict):
     for k, v in model_dict['blobs'].items():
         if hasattr(v, 'shape'):
             if v.shape:
-                if v.shape[0] == NUM_PUBLAYNET_CLS or v.shape[0] == 4 * NUM_PUBLAYNET_CLS:
+                if v.shape[0] in [NUM_PUBLAYNET_CLS, 4 * NUM_PUBLAYNET_CLS]:
                     PubLayNet_blob = model_dict['blobs'][k]
-                    print(
-                        'Converting PUBLAYNET blob {} with shape {}'.
-                        format(k, PubLayNet_blob.shape)
-                    )
+                    print(f'Converting PUBLAYNET blob {k} with shape {PubLayNet_blob.shape}')
                     target_blob = convert_PubLayNet_blob_to_target_blob(
                         PubLayNet_blob, args.lookup_table
                     )
-                    print(' -> converted shape {}'.format(target_blob.shape))
+                    print(f' -> converted shape {target_blob.shape}')
                     model_dict['blobs'][k] = target_blob
 
 
@@ -63,7 +60,7 @@ def convert_PubLayNet_blob_to_target_blob(PubLayNet_blob, lookup_table):
     PubLayNet_shape = PubLayNet_blob.shape
     leading_factor = int(PubLayNet_shape[0] / NUM_PUBLAYNET_CLS)
     tail_shape = list(PubLayNet_shape[1:])
-    assert leading_factor == 1 or leading_factor == 4
+    assert leading_factor in {1, 4}
 
     # Reshape in [num_classes, ...] form for easier manipulations
     PubLayNet_blob = PubLayNet_blob.reshape([NUM_PUBLAYNET_CLS, -1] + tail_shape)
@@ -105,5 +102,5 @@ if __name__ == '__main__':
     weights = load_and_convert_PubLayNet_model(args)
 
     save_object(weights, args.out_file_name)
-    print('Wrote blobs to {}:'.format(args.out_file_name))
+    print(f'Wrote blobs to {args.out_file_name}:')
     print(sorted(weights['blobs'].keys()))
